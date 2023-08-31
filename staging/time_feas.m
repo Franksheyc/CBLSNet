@@ -69,13 +69,9 @@ pye=(yef1(:,end-1)+yef1(:,end))/2;
 end
 
 function [f,f0]=blstimekindt(time_related,m)
-    h=time_related*2+1;
-    if m==1
-  f=[ [h*ones(1,5)]  [5 5 1]  [5*ones(1,h)]  h 10 h 1 2 5];
-    else
-        f=[ [h*ones(1,5)] [5 5 1]  [5*ones(1,h)] h 10 h 1 2 5];
-    end
-    f0=[1:5];
+h=time_related*2+1;
+f=[ [h*ones(1,5)] [5 5 1]  [5*ones(1,h)] h 10 h 1 2 5];
+f0=[1:5];
 end
 
 function [C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mode,train_yy,si,bs)
