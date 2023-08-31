@@ -258,55 +258,10 @@ function [TrainingAccuracy,Training_time,beta2,xx,yy,train_y,tn]=training(T3,bet
 tn=0;
 tic
 train_yy = result(train_y);
-train_y0=label2lab(train_yy);
-k=1;ll=ones(size(T3,1),1);
-mf1=0.1;mf10=0;mac=0.1;mac10=0;
-while  k<5 && mf1+mac>mf10+mac10
-mac10=mac;mf10=mf1;
 beta2 = beta*train_y;
-%%%%%%%%%%%%%%%%%Training Accuracy%%%%%%%%%%%%%%%%%%%%%%%%%%
-xx = T3  *  beta2 ;
+xx = T3 * beta2;
 yy = result(xx);
-ac(k)=length(find(yy == train_yy))/size(train_yy,1);
-% if ac>=0.92
-%     TrainingAccuracy=ac;
-%     Training_time = toc;
-%     disp('Training has been finished!');
-%     disp(['The Total Training Time is : ', num2str(Training_time), ' seconds' ]);
-%     disp(['Training Accuracy is : ', num2str(TrainingAccuracy * 100), ' %' ]);
-%     return
-% end
-
-[~,~,accuracy,~,~,F1score,~,~,~] = Evaluation(yy,train_y0,5);
-mac=mean(accuracy);
-mf1=mean(F1score);
-
-m=find(yy~=train_yy);
-m1=train_yy(m);
-for i=1:length(m)
-    dify=train_y0(m(i),m1(i))-xx(m(i),m1(i));
-    train_y(m(i),m1(i))=train_y(m(i),m1(i))+0.1*  dify;%mean(abs(train_y(m(i),:)-xx(m(i),:)));%
-    s=setdiff(1:5,m1(i));
-    train_y(m(i),s)=train_y(m(i),s)-0.1*xx(m(i),s);
-end
-clear m1
-m0=find(yy==train_yy);
-md=find(train_yy(m0)==mode(train_y0));
-m2=setdiff(1:length(m0),union(md,m));
-m1=train_yy(m0(m2));
-for i=1:length(m2)
-    dify=(train_y0(m2(i),m1(i))-xx(m2(i),m1(i)) );
-    train_y(m2(i),m1(i))=train_y(m2(i),m1(i))+0.05* dify;%mean(abs(train_y(m2(i),:)-xx(m2(i),:)));%
-end
-k=k+1;
-% train_y(m,yy(m))=train_y(m,yy(m))-0.1*xx(m,yy(m));
-% train_y(m,train_yy(m))=train_y(m,train_yy(m))-0.1*xx(m,trian_yy(m));
-end
-
-% beta2 = beta*train_y;
-% xx = T3 * beta2;
-% yy = result(xx);
-% ac=length(find(yy == train_yy))/size(train_yy,1);
+ac=length(find(yy == train_yy))/size(train_yy,1);
 TrainingAccuracy = ac;
 tn=length(ac);
 Training_time = toc;
