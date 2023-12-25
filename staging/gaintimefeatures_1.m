@@ -1,4 +1,4 @@
-function [C_xr,train_xm,cr,Cr,C_xe,test_xm,ce,Ce,sumweight_tr,sumweight_te,C_yyr,C_yye,yrf,yef]=gaintimefeatures_1(xx,x,y,yy,time_related,ss,ss1,leng,mode,train_yy,si,bs)
+function [C_xr,train_xm,cr,Cr,C_xe,test_xm,ce,Ce,sumweight_tr,sumweight_te,C_yyr,C_yye,yrf,yef]=gaintimefeatures_1(xx,x,y,yy,time_related,ss,ss1,leng,mode,train_yy,si,bs,fr,f1r,fe,f1e)
 % function [C_xr,train_xm,cr,Cr,C_xe,test_xm,ce,Ce,sumweight_tr,sumweight_te,C_yyr,C_yye,wxr,Cxxr,wxe,Cxxe,x_b,xx_b,crf,cef,yrf,yef]=gaintimefeatures_1(xx,x,y,yy,time_related,ss,ss1,leng,mode,si,bs)
 %   x=softmax_1(x);
 %   xx=softmax_1(xx);
@@ -49,51 +49,52 @@ function [C_xr,train_xm,cr,Cr,C_xe,test_xm,ce,Ce,sumweight_tr,sumweight_te,C_yyr
 
 sumweight_tr=[ar(:,5).*train_xm1 ar(:,4).*train_xm2];
 sumweight_te=[ae(:,5).*test_xm1 ae(:,4).*test_xm2];
-    
-    gg1=1;gg2=0;
-    singlelen=time_related*mode+1;
-    for i=1:length(ss)
-        gg=leng((ss(i)));
-        gg2=gg2+gg;
-        for ik=1:size(y_tr,2)
-%         C_yr(gg1:grg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(y_tr(gg1:gg2,ik),time_related);%
-        C_xr(gg1:gg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(xx(gg1:gg2,ik),time_related,mode);
-%         C_xpr(gg1:gg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(x_pr(gg1:gg2,ik),time_related);
-        end
-% C_xr(gg1:gg2,:)=time_causal(xx(gg1:gg2,:),time_related,mode);
-        C_yyr(gg1:gg2,1:singlelen)=time_causal(yy(gg1:gg2),time_related,mode);
-%         Cr1(gg1:gg2,1:singlelen)=time_causal(cr(gg1:gg2,1),time_related,mode);
-        Cr(gg1:gg2,1:singlelen)=time_causal(cr(gg1:gg2),time_related,mode);
-%         for ik=1:size(train_xm,2)
-%             Train_xm(gg1:gg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(train_xm(gg1:gg2,ik),time_related);
+
+
+C_xr=time_causal(xx,time_related,mode);
+C_yyr=time_causal(yy,time_related,mode);
+Cr=time_causal(cr,time_related,mode);
+C_xe=time_causal(x,time_related,mode);
+C_yye=time_causal(y,time_related,mode);
+Ce=time_causal(ce,time_related,mode);
+
+C_xr(f1r)=0;
+C_yyr(fr)=0;
+Cr(fr)=0;
+C_xe(f1e)=0;
+C_yye(fe)=0;
+Ce(fe)=0;
+
+%     gg1=1;gg2=0;
+%     singlelen=time_related*mode+1;
+%     for i=1:length(ss)
+%         gg=leng((ss(i)));
+%         gg2=gg2+gg;
+%         for ik=1:size(y_tr,2)
+%             C_xr(gg1:gg2,:)=time_causal(xx(gg1:gg2,:),time_related,mode);
 %         end
-        gg1=gg1+gg;
-    end
-    gg1=1;gg2=0;
-    for i=1:length(ss1)
-        gg=leng((ss1(i)));
-        gg2=gg2+gg;
-        for ik=1:size(y_te,2)
-%         C_ye(gg1:gg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(y_te(gg1:gg2,ik),time_related);
-        C_xe(gg1:gg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(x(gg1:gg2,ik),time_related,mode);
-%         C_xpe(gg1:gg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(x_pe(gg1:gg2,ik),time_related);
-        end
-% C_xe(gg1:gg2,:)=time_causal(x(gg1:gg2,:),time_related,mode);
-        C_yye(gg1:gg2,1:singlelen)=time_causal(y(gg1:gg2),time_related,mode);
-%         Ce1(gg1:gg2,1:singlelen)=time_causal(ce(gg1:gg2,1),time_related,mode);
-        Ce(gg1:gg2,1:singlelen)=time_causal(ce(gg1:gg2),time_related,mode);
-%         for ik=1:size(test_xm,2)
-%             Test_xm(gg1:gg2,(ik-1)*singlelen+1:singlelen*ik)=time_causal(test_xm(gg1:gg2,ik),time_related);
+%         C_yyr(gg1:gg2,:)=time_causal(yy(gg1:gg2),time_related,mode);
+%         Cr(gg1:gg2,:)=time_causal(cr(gg1:gg2),time_related,mode);
+%         gg1=gg1+gg;
+%     end
+%     gg1=1;gg2=0;
+%     for i=1:length(ss1)
+%         gg=leng((ss1(i)));
+%         gg2=gg2+gg;
+%         for ik=1:size(y_te,2)
+%             C_xe(gg1:gg2,:)=time_causal(x(gg1:gg2,:),time_related,mode);
 %         end
-        gg1=gg1+gg;
-    end
+%         C_yye(gg1:gg2,:)=time_causal(y(gg1:gg2),time_related,mode);
+%         Ce(gg1:gg2,:)=time_causal(ce(gg1:gg2),time_related,mode);
+%         gg1=gg1+gg;
+%     end
     
 %     nh=markss(mode,time_related,x,y,singlelen);
 %     C_xe(nh)=eps;
 %     nh1=markss(mode,time_related,xx,yy,singlelen);
 %     C_xr(nh1)=eps;
     
-%     [wxr,Cxxr]=weight_ml(C_xr,time_related);
+%     [wxr,Cxxr]=weight_ml(C_xr,time_related);%Cxxr重新排列的C_xr  wxr：本帧与前后的互相关
 %     [wxe,Cxxe]=weight_ml(C_xe,time_related);
     
 %     meancr=mean(Cr')';

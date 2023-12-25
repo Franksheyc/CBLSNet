@@ -1,4 +1,4 @@
-function [C_train_x,C_test_x,cr1,ce1,ftr,fte,f,f0]=time_feas(xx,x,y,yy,time_related,ss,ss1,leng,mod,train_yy,train_y,si,bs)
+function [C_train_x,C_test_x,cr1,ce1,ftr,fte,f,f0]=time_feas(xx,x,y,yy,time_related,ss,ss1,leng,mod,train_yy,train_y,si,bs,ffr,ff1r,ffe,ff1e)
 % test_yy=[];m=0;
 % train_y=label2lab(train_yy);
 % [~,~,~,~,~,f1,~,~] = Evaluation(yy,train_y,5);
@@ -8,7 +8,7 @@ function [C_train_x,C_test_x,cr1,ce1,ftr,fte,f,f0]=time_feas(xx,x,y,yy,time_rela
 % while ac2>ac1
 %     h=h+1;
 % [C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,wxr1,Cxxr1,wxe1,Cxxe1,x_b,xx_b,crf1,cef1,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mode,si,bs);
-[C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mod,train_yy,si,bs);
+[C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mod,train_yy,si,bs,ffr,ff1r,ffe,ff1e);
 % [Cwxr1,Cwxr2,Cwxr3,crx,ftr]=new_cx(C_xr1,time_related,mode,yy);
 % [Cwxe1,Cwxe2,Cwxe3,cex,fte]=new_cx(C_xe1,time_related,mode,y);
 pyr=(yrf1(:,end-1)+yrf1(:,end))/2;
@@ -18,6 +18,9 @@ pye=(yef1(:,end-1)+yef1(:,end))/2;
 [Cwxe2,cex,fte]=new_cx(C_xe1,time_related,mod,y);
 [xx,yy]=addtimef(xx,yy,ftr,train_yy);
 
+
+% 使用pyr的极小值点找到跳变点，并加以修正
+% 效果不佳，可在更大数据集上测试
 % n=5;
 % xx=conti_prob(xx,n,pyr,yy);
 % x=conti_prob(x,n,pye,y);
@@ -28,6 +31,7 @@ pye=(yef1(:,end-1)+yef1(:,end))/2;
 % %     ac2=0;
 % % else
 % %     m=m+1;
+% % %     %%  此处新增重新计算时间特征
 % % %     [C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,wxr1,Cxxr1,wxe1,Cxxe1,x_b,xx_b,crf1,cef1,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mode);
 % % %     [Cwxr2,crx,ftr,per]=new_cx(C_xr1,time_related,mode,yy);
 % % %     [Cwxe2,cex,fte,pee]=new_cx(C_xe1,time_related,mode,y);
@@ -65,16 +69,24 @@ pye=(yef1(:,end-1)+yef1(:,end))/2;
 % % if train_yy(time_related+1)
 % train_y(mp1(i),:)=train_y(mp1(i),:)+0.05*yrr(mp1(i),:).*sj;
 % % end
+% % 注意区分当前帧和非当前帧，同时，注意跳变帧的处理
 % end
 end
 
 function [f,f0]=blstimekindt(time_related,m)
-h=time_related*2+1;
-f=[ [h*ones(1,5)] [5 5 1]  [5*ones(1,h)] h 10 h 1 2 5];
-f0=[1:5];
+    h=time_related*2+1;
+    if m==1%按返回结果的特征种类构成
+%         f=[h*ones(1,5) 3 5 5*ones(1,h) h 10 2 h];%增加的 c( h*ones(1,5) 3 5*ones(1,h-1) 11 10 2 11)
+  f=[ [h*ones(1,5)]  [5 5 1]  [5*ones(1,h)]  h 10 h 1 2 5];%增加的 c( h*ones(1,5) 3 5*ones(1,h-1) 11 10 2 11)  
+%   f=[ [h*ones(1,5)]  [5 5 1]  [5*ones(1,h)] 10 h 1 5];%增加的 c( h*ones(1,5) 3 5*ones(1,h-1) 11 10 2 11) 
+    else
+        f=[ [h*ones(1,5)] [5 5 1]  [5*ones(1,h)] h 10 h 1 2 5];%增加的 c
+%         f=[ [h*ones(1,5)] [5 5 1] [5*ones(1,h)]  10 h 1 5];%增加的 c
+    end
+    f0=[1:5];
 end
 
-function [C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mode,train_yy,si,bs)
+function [C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mode,train_yy,si,bs,ffr,ff1r,ffe,ff1e)
 % function [C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_yr1,C_ye1,Cr2,Ce2,wxr1,Cxxr1,wxe1,Cxxe1,x_b,xx_b,crf1,cef1,yrf1,yef1]=gaintimefeature(xx,x,y,yy,time_related,ss,ss1,leng,mode,si,bs)
         C_xr1=[];
         train_xm1=[];
@@ -94,12 +106,15 @@ function [C_xr1,train_xm1,cr1,C_xe1,test_xm1,ce1,sumweight_tr1,sumweight_te1,C_y
 %         cef1=[];
         yrf1=[];
         yef1=[];
-        tic
+%         tic
         for i=1:length(time_related)
+            %%%%%%%%%%%%%%%%%%%%%%形成用于的二次训练的数据%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%形成用于的二次训练的数据%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %     [C_xr,train_xm,cr,C_yr,Cr1,Cr2,C_xe,test_xm,ce,C_ye,Ce1,Ce2,sumweight_tr,sumweight_te]=gaintimefeatures_1(xx,x,y,yy,time_related,ss,ss1,leng);
+            %mode为选择当前帧之前（1）还是两侧（2）的数据
 %             [C_xr,train_xm,cr,Cr1,Cr2,C_xe,test_xm,ce,Ce1,Ce2,sumweight_tr,sumweight_te,C_yr,C_ye]=gaintimefeatures_1(xx,x,y,yy,time_related(i),ss,ss1,leng,mode);
 %             [C_xr,train_xm,cr,Cr2,C_xe,test_xm,ce,Ce2,sumweight_tr,sumweight_te,C_yr,C_ye,wxr,Cxxr,wxe,Cxxe,x_b,xx_b,crf,cef,yrf,yef]=gaintimefeatures_1(xx,x,y,yy,time_related(i),ss,ss1,leng,mode,si,bs);
-[C_xr,train_xm,cr,Cr2,C_xe,test_xm,ce,Ce2,sumweight_tr,sumweight_te,C_yr,C_ye,yrf,yef]=gaintimefeatures_1(xx,x,y,yy,time_related(i),ss,ss1,leng,mode,train_yy,si,bs);
+[C_xr,train_xm,cr,Cr2,C_xe,test_xm,ce,Ce2,sumweight_tr,sumweight_te,C_yr,C_ye,yrf,yef]=gaintimefeatures_1(xx,x,y,yy,time_related(i),ss,ss1,leng,mode,train_yy,si,bs,ffr,ff1r,ffe,ff1e);
             C_xr1=[C_xr1 C_xr];
             train_xm1=[train_xm1 train_xm];
             cr1=[cr1 cr];

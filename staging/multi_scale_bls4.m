@@ -164,7 +164,7 @@ for i=1:length(N1)
 %         if length(mm)>150000
 %             mm(hh)=0;
 %         else
-            mm(hh)=1;
+            mm(hh)=1;% sample drop out
 %         end
         
         if f1~=1
@@ -178,7 +178,13 @@ for i=1:length(N1)
         We{j}=we;
 %         A1 = H1 * (we .* mm);%A1 = mapminmax(A1);
 %         %%%%%
-        A1=H1.*mm*we;
+        if f1==1
+            A1=H1.*mm*we;
+        elseif j==1 || mod(j,5)==0
+            A1=H1.*mm*we;
+        else
+            A1=H1.*mm*we+A1*we(1);%recurrte BLS（use the output of last kind of input） just work to local feature node
+        end
 %         A1=zscore(A1')';
         beta1  =  sparse_bls(A1,H1,1e-3,20)';
         beta11(l11:l21,:)=beta1;
@@ -227,8 +233,6 @@ function [wh,l2,T2]=enhance_node(y,s,N1)
 H2 = [y .1 * ones(size(y,1),1)];
 N2 = size(y,2);
 T2 = zeros(size(y,1),sum(N1));
-H2=gpuArray(H2);
-s=gpuArray(s);
 l01=1;l02=0;
 for i=1:length(N1)
     le=N1(i);l02=l02+le;
@@ -237,14 +241,11 @@ for i=1:length(N1)
     l20 = max(max(T20));
     l20 = s/l20;
     T20 = tansig(T20 * l20);
-    T2(:,l01:l02)=gather(T20);
+    T2(:,l01:l02)=T20;
     wh(:,l01:l02)=wh0;
     l2(i)=l20;
     l01=l01+le;
 end
-wh=gather(wh);
-l2=gather(l2);
-% T2=gather(T2);
 clear N
 end
 
@@ -254,8 +255,8 @@ clear y T2
 beta = (T3'  *  T3+eye(size(T3',1)) * (C)) \ ( T3');
 end
 
+
 function [TrainingAccuracy,Training_time,beta2,xx,yy,train_y,tn]=training(T3,beta,train_y)
-tn=0;
 tic
 train_yy = result(train_y);
 beta2 = beta*train_y;
