@@ -19,7 +19,7 @@ function outdata = PermutationEntropy( indata, delay, order, windowSize )
 % @author Valentina Unakafova
 % @date 10.11.2017
 % @email UnakafovaValentina(at)gmail.com
- obj_Dir=['F:\sleep\open database\feature extraction1\Fast-permutation-entropy-master\table',num2str(order),'.mat'];
+ obj_Dir=['D:\database\stage scoring\open database\feature extraction\Fast-permutation-entropy-master\table',num2str(order),'.mat'];
  load(obj_Dir); % the precomputed table
  patternsTable = eval( ['table' num2str( order )] );    
  nPoints    = numel( indata );              % length of the time series
