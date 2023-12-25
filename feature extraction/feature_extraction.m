@@ -1,11 +1,11 @@
 clear
 clc
 warning off
-% objDir1='D:\database\MASS\staged\data\SS';
+% objDir1='D:\database\MASS\staged\data\SS';%读取文件地址
 t='dod';
-objDir1=['F:\sleep\data\',t,'\data\ccshs'];
+objDir1=['F:\sleep\data\',t,'\data\ccshs'];%读取文件地址
 objDir2=['F:\sleep\data\',t,'\label\ccshs'];
-% objDir1=['H:\pshhs\data\',t,'1'];
+% objDir1=['H:\pshhs\data\',t,'1'];%读取文件地址
 % objDir2=['F:\sleep\data\',t,'\label\shhs1'];
 outputDir = ['F:\sleep\data\',t,'\feature\ccshs'];
 mkdir(outputDir)
@@ -14,6 +14,7 @@ k=0;
 % Lna2=0;Lla2=0;mark=0;
 b=7;
 samplingrate=100;
+tic
 
 %     path1=[objDir1,num2str(ij)];
 %     path2=[objDir2,num2str(ij)];
@@ -78,23 +79,32 @@ for ii=mm*(mk-1)+1:min(mm*mk,length(n1)-2)%ceil((length(n1)-2)/6)*5+1:length(n1)
     EMG =DAT(:,4*unit*samplingrate+1:end);
     % % % % % %
     
-    [C3_frec,C3coe]=wavelet_features(b,C3);
-    [C4_frec,C4coe]=wavelet_features(b,C4);
+    [C3_frec,C3coe]=wavelet_features1(b,C3);
+    [C4_frec,C4coe]=wavelet_features1(b,C4);
     C3_frec=struct2cell(C3_frec);
     C4_frec=struct2cell(C4_frec);
-    for i=1:length(C3_frec)
+    %          C3_frec1=struct2cell(C3_frec1);
+    %          C4_frec1=struct2cell(C4_frec1);
+    parfor i=1:length(C3_frec)
         C3_tfs=time_features(C3_frec{i},'EEG');
         C4_tfs=time_features(C4_frec{i},'EEG');
+        %              C3_tfs1=time_features(C3_frec1{i},'EEG');
+        %              C4_tfs1=time_features(C4_frec1{i},'EEG');
         C3tfs{i}=C3_tfs;
         C4tfs{i}=C4_tfs;
+        %              C3tfs1{i}=C3_tfs1;
+        %              C4tfs1{i}=C4_tfs1;
     end
     EOGcoff=EOG_cof(EOGL,EOGR,samplingrate);
     EOGLtfs=time_features(EOGL,'EOG');
     EOGRtfs=time_features(EOGR,'EOG');
     EMGtfs=time_features(EMG,'EMG');
     u=samplingrate*(unit/6);
+    %          for i=1:6
     C30_tfs=time_features(C3,'EEG');
     C40_tfs=time_features(C4,'EEG');
+    %          end
+    
     
     C3H=[];C4H=[];EOGLH=[];EOGRH=[];EMGH=[];
     for i=1:6
@@ -113,7 +123,16 @@ for ii=mm*(mk-1)+1:min(mm*mk,length(n1)-2)%ceil((length(n1)-2)/6)*5+1:length(n1)
         EOGLH=[EOGLH EOGLa,EOGLm,EOGLc];
         EOGRH=[EOGRH EOGRa,EOGRm,EOGRc];
         EMGH=[EMGH EMGa,EMGm,EMGc];
-    end   
+    end
+    %          C3coe{ij}=C3_fcoe;
+    %          C4coe{ij}=C4_fcoe;
+    %          C3tfs{ij}=C3tfs1;
+    %          C4tfs{ij}=C4tfs1;
+    %          EOGLtfs{ij}=EOGL_tfs;
+    %          EOGRtfs{ij}=EOGR_tfs;
+    %          EOGcoff{ij}=EOG_coff;
+    %          EMGtfs{ij}=EMG_tfs;
+    
     savename=[outputDir,na];
     save(savename,'C3coe','C4coe','C3tfs','C4tfs','C30_tfs','C40_tfs','EOGLtfs','EOGRtfs','EOGcoff','EMGtfs','C3H','C4H','EOGLH','EOGRH','EMGH','label','lab');
     clear C3coe C4coe C3tfs C4tfs C3coe1 C4coe1 C3tfs1 C4tfs1 EOGLtfs EOGRtfs EOGcoff EMGtfs C3 C4 EOGL EOGR EMG C30_tfs C40_tfs C3H C4H EOGLH EOGRH EMGH
@@ -121,3 +140,8 @@ for ii=mm*(mk-1)+1:min(mm*mk,length(n1)-2)%ceil((length(n1)-2)/6)*5+1:length(n1)
     len1=length(find(label~=5));
     leng_no9(k)=len1;
 end
+
+total=sum(leng);
+totalnum_no9=sum(leng_no9);
+savename1=[outputDir,'info.mat'];save(savename1,'leng','leng_no9','total','totalnum_no9');
+toc
